@@ -1,0 +1,27 @@
+{
+  "name": "@indevweb/moleculer-transport-amazonsqs",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devalexandre/Moleculer-Transport-AmazonSQS.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/devalexandre/Moleculer-Transport-AmazonSQS/issues"
+  },
+  "homepage": "https://github.com/devalexandre/Moleculer-Transport-AmazonSQS#readme",
+  "dependencies": {
+    "aws-sdk": "^2.1037.0",
+    "moleculer": "^0.14.18"
+  },
+  "devDependencies": {
+    "jest": "^27.4.0"
+  }
+}
