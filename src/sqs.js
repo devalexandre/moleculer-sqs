@@ -1,73 +1,125 @@
-const BaseTransporter = require("moleculer").Transporters.Base;
+"use strict";
+
+const Transporter = require("moleculer").Transporters.Base;
 const AWS = require('aws-sdk');
 
-class SQSTransporter extends BaseTransporter {
-    constructor(opts) {
-        super(opts);
-        this.verify(opts);
-        AWS.config.update({region: opts.region.toLowerCase()});
-        this.opts = opts;
-       
-        
-    }
-    connect() { 
-            this.sqs = new AWS.SQS({apiVersion: this.opts.apiVersion});
-    }
+/**
+ * @class Base
+ * @extends {Transporter}
+ */
 
- 	/**
+class SQSTransporter extends Transporter {
+	/**
+	 * Creates an instance of SQSTransporter.
+	 *
+	 * @param {any} opts
+	 *
+	 * @memberof SQSTransporter
+	 */
+	constructor(opts) {
+	
+     
+		super(opts);
+        this.client = null;
+        this.QueueUrl = null;
+        this.opts = this.verify(opts);
+    
+	}
+
+	/**
+	 * Connect to a SQS server
+	 *
+	 * @memberof SQSTransporter
+	 */
+	connect() {
+        return new Promise((resolve, reject) => {
+
+       this.client = new AWS.SQS(this.opts);
+        if(!this.client) reject("Error connecting to SQS");
+        this.logger.info("Connecting to SQS ");
+        this.onConnected().then(resolve);
+      
+    });
+	}
+
+	/**
+	 * Disconnect from a SQS server
+	 *
+	 * @memberof SQSTransporter
+	 */
+	disconnect(params) {
+        this.logger.info("Disconnect to SQS ", params);
+        this.client = null;
+	}
+
+	/**
 	 * Subscribe to a command
 	 *
 	 * @param {String} cmd
+	 * @param {String} nodeID
 	 *
-	 * @memberof RedisTransporter
+	 * @memberof SQSTransporter
 	 */
     async  subscribe(cmd, nodeID) {
-        try{
-		const topic = this.getTopicName(cmd, nodeID);
-            const params = this.opts.hasOwnProperty('params') ? this.opts.params  : this.defaultParams()
-            params.QueueUrl = await this.createQueue(topic);
-                 
-          return  this.sqs.receiveMessage(params, (err, data) => {
-                if (err) {
-                    this.logger.error(err);
-                    return;
-                }
-                if (data.Messages) {
-                    data.Messages.forEach(message => {
-                        this.logger.info(`Received message: ${message.Body}`);
-                        this.receive(cmd, JSON.parse(message.Body)); 
-                    });
-                }
-            }).promise();
-            
-           
-        } catch (error) {
-            throw new Error(error);
-        }
-    }
-    
-    
-    async send(topic, data) {
-        try {
-            const  QueueUrl = await this.createQueue(topic)
-            const message = typeof data === 'string' ? data : JSON.stringify(data);
-            const params = {
-                MessageBody: message,
-                QueueUrl
+        
+        
+		const queueName = this.getTopicName(cmd, nodeID)
+        const params = this.opts.hasOwnProperty('params') ? this.opts.params  : this.defaultParams()
+        params.QueueUrl = await this.createQueue(queueName);
+        const vm = this;
+        
+         this.client.receiveMessage(params, (err, data) => {
+            if(!this.client) return this.broker.Promise.reject("Error connecting to SQS");
+            if (err) {
+                this.logger.error(err);
+                return this.broker.Promise.reject(err);
             }
-            return this.sqs.sendMessage(params, function(err, data) {
-                if (err) {
-                  return err;
-                } else {
-                  return data.MessageId;
-                }
-              }).promise();
-             
-        } catch (error) {
-            throw new Error(error);
-        }
+            if (data.Messages) {
+          
+                    const message = data.Messages[0];
+                
+                      vm.logger.debug(` queueName Received ${message.Body}`);
+                      vm.receive(cmd, message.Body); 
+                 
+            }
+            this.subscribe(cmd, nodeID);
+        });
+        
+    return this.broker.Promise.resolve();
     }
-    
+
+
+	/**
+	 * Send data buffer.
+	 *
+	 * @param {String} topic
+	 * @param {Buffer} data
+	 * @param {Object} meta
+	 *
+	 * @returns {Promise}
+	 */
+     async send(topic, data) {
+         if(!this.client) return this.broker.Promise.reject("Error connecting to SQS");
+         
+        const  QueueUrl = await this.createQueue(topic)
+        const message = JSON.parse(Buffer.from(data).toString());
+        const vm = this;
+        const params = {
+            MessageBody: JSON.stringify(message),
+            QueueUrl
+        }
+          this.client.sendMessage(params, function(err, data) {
+            if (err) {
+              return err;
+            } else {
+                vm.logger.debug(` queueName Sent ${topic.split('.').join('-')}`);
+              return data.MessageId;
+            }
+          });
+          
+          return this.broker.Promise.resolve();
+
+    }
     verify(opts) {
         if(!opts.hasOwnProperty('region')) {
             throw new Error('region is required');
@@ -95,7 +147,9 @@ class SQSTransporter extends BaseTransporter {
     }
 
     async createQueue(queueName) {
+        
         const QueueName = this.cleartopicName(queueName);
+        
         var params = {
             QueueName
         };
@@ -104,7 +158,7 @@ class SQSTransporter extends BaseTransporter {
             return QueueUrl;
 
         } catch (error) {
-        const { QueueUrl } = await this.sqs.createQueue(params, (err, data) => {
+        const { QueueUrl } = await this.client.createQueue(params, (err, data) => {
             if (err) {
                 return err;
             }
@@ -120,17 +174,32 @@ class SQSTransporter extends BaseTransporter {
 
     async findQueue(params) {
 
-       return   this.sqs.getQueueUrl(params, (err, data) => {
+       return   this.client.getQueueUrl(params, (err, data) => {
             if (err) {
                 return null;
             }
+            
             return data.QueueUrl;
         }
         ).promise();
     }
 
     cleartopicName(topic) {
-        return topic.split('.').join('-')
+        return topic.split('.').join('-');
+    }
+    verify(opts) {
+        if(!opts.hasOwnProperty('region')) {
+            throw new Error('region is required');
+        }
+        if(!opts.hasOwnProperty('apiVersion')) {
+            throw new Error('apiVersion is required');
+        }
+        if(!opts.hasOwnProperty('serveless')) {
+          opts.serveless = false;
+        }
+
+        return opts;
+
     }
 }
 
