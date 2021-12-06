@@ -1,3 +1,3 @@
-const SQSTransporter = require('./src/sqs');
+const SQSTransporter = require("./src/sqs");
 
 module.exports = SQSTransporter;

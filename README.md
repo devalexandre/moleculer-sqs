@@ -1,4 +1,4 @@
-# [WIP] Moleculer SQS Transport 
+# [WIP] Moleculer SQS Transport
 
 ![](https://docs.aws.amazon.com/pt_br/sdk-for-javascript/v2/developer-guide/images/code-samples-sqs.png)
 
@@ -8,23 +8,14 @@ Moleculer SQS is transport for use AWS SQS.
 
 ### 1 Step
 
-Install dependencies for moleculer project and aws-sdk.
-
-```
-npm i aws-sdk moleculer -S
-```
-
-### 2 Step
-
 ```
 npm i @indevweb/moleculer-transport-amazonsqs
 ```
 
-### 3 Step
+### 2 Step
+
 Use a official
 [AWS SQS Doc](https://docs.aws.amazon.com/pt_br/sdk-for-javascript/v2/developer-guide/configuring-the-jssdk.html) for more details of configuration.
-
-
 
 ```js
 const { ServiceBroker } = require("moleculer");
@@ -52,7 +43,7 @@ broker.createService({
             return result
         }
     }
-    
+
 });
 
 
@@ -62,10 +53,10 @@ broker.start()
     // Print the response
     .then(res => {
         console.log("5 + 3 =", res)
- 
+
     })
     .catch(err => {
         console.error("Error occured!" ,${err.message})
-      
+
     });
 ```

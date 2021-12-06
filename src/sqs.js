@@ -1,7 +1,7 @@
 "use strict";
 
 const Transporter = require("moleculer").Transporters.Base;
-const AWS = require('aws-sdk');
+const AWS = require("aws-sdk");
 
 /**
  * @class Base
@@ -17,13 +17,10 @@ class SQSTransporter extends Transporter {
 	 * @memberof SQSTransporter
 	 */
 	constructor(opts) {
-	
-     
 		super(opts);
-        this.client = null;
-        this.QueueUrl = null;
-        this.opts = this.verify(opts);
-    
+		this.client = null;
+		this.QueueUrl = null;
+		this.opts = this.verify(opts);
 	}
 
 	/**
@@ -32,14 +29,12 @@ class SQSTransporter extends Transporter {
 	 * @memberof SQSTransporter
 	 */
 	connect() {
-        return new Promise((resolve, reject) => {
-
-       this.client = new AWS.SQS(this.opts);
-        if(!this.client) reject("Error connecting to SQS");
-        this.logger.info("Connecting to SQS ");
-        this.onConnected().then(resolve);
-      
-    });
+		return new Promise((resolve, reject) => {
+			this.client = new AWS.SQS(this.opts);
+			if (!this.client) reject("Error connecting to SQS");
+			this.logger.info("Connecting to SQS ");
+			this.onConnected().then(resolve);
+		});
 	}
 
 	/**
@@ -48,8 +43,8 @@ class SQSTransporter extends Transporter {
 	 * @memberof SQSTransporter
 	 */
 	disconnect(params) {
-        this.logger.info("Disconnect to SQS ", params);
-        this.client = null;
+		this.logger.info("Disconnect to SQS ", params);
+		this.client = null;
 	}
 
 	/**
@@ -60,34 +55,29 @@ class SQSTransporter extends Transporter {
 	 *
 	 * @memberof SQSTransporter
 	 */
-    async  subscribe(cmd, nodeID) {
-        
-        
-		const queueName = this.getTopicName(cmd, nodeID)
-        const params = this.opts.hasOwnProperty('params') ? this.opts.params  : this.defaultParams()
-        params.QueueUrl = await this.createQueue(queueName);
-        const vm = this;
-        
-         this.client.receiveMessage(params, (err, data) => {
-            if(!this.client) return this.broker.Promise.reject("Error connecting to SQS");
-            if (err) {
-                this.logger.error(err);
-                return this.broker.Promise.reject(err);
-            }
-            if (data.Messages) {
-          
-                    const message = data.Messages[0];
-                
-                      vm.logger.debug(` queueName Received ${message.Body}`);
-                      vm.receive(cmd, message.Body); 
-                 
-            }
-            this.subscribe(cmd, nodeID);
-        });
-        
-    return this.broker.Promise.resolve();
-    }
+	async subscribe(cmd, nodeID) {
+		const queueName = this.getTopicName(cmd, nodeID);
+		const params = this.opts.hasOwnProperty("params") ? this.opts.params : this.defaultParams();
+		params.QueueUrl = await this.createQueue(queueName);
+		const vm = this;
 
+		this.client.receiveMessage(params, (err, data) => {
+			if (!this.client) return this.broker.Promise.reject("Error connecting to SQS");
+			if (err) {
+				this.logger.error(err);
+				return this.broker.Promise.reject(err);
+			}
+			if (data.Messages) {
+				const message = data.Messages[0];
+
+				vm.logger.debug(`queueName Received ${message.Body}`);
+				vm.receive(cmd, message.Body);
+			}
+			this.subscribe(cmd, nodeID);
+		});
+
+		return this.broker.Promise.resolve();
+	}
 
 	/**
 	 * Send data buffer.
@@ -98,109 +88,97 @@ class SQSTransporter extends Transporter {
 	 *
 	 * @returns {Promise}
 	 */
-     async send(topic, data) {
-         if(!this.client) return this.broker.Promise.reject("Error connecting to SQS");
-         
-        const  QueueUrl = await this.createQueue(topic)
-        const message = JSON.parse(Buffer.from(data).toString());
-        const vm = this;
-        const params = {
-            MessageBody: JSON.stringify(message),
-            QueueUrl
-        }
-          this.client.sendMessage(params, function(err, data) {
-            if (err) {
-              return err;
-            } else {
-                vm.logger.debug(` queueName Sent ${topic.split('.').join('-')}`);
-              return data.MessageId;
-            }
-          });
-          
-          return this.broker.Promise.resolve();
+	async send(topic, data) {
+		if (!this.client) return this.broker.Promise.reject("Error connecting to SQS");
 
-    }
-    verify(opts) {
-        if(!opts.hasOwnProperty('region')) {
-            throw new Error('region is required');
-        }
-        if(!opts.hasOwnProperty('apiVersion')) {
-            throw new Error('apiVersion is required');
-        }
-     
+		const QueueUrl = await this.createQueue(topic);
+		const message = JSON.parse(Buffer.from(data).toString());
+		const vm = this;
+		const params = {
+			MessageBody: JSON.stringify(message),
+			QueueUrl
+		};
+		this.client.sendMessage(params, function (err, data) {
+			if (err) {
+				return err;
+			} else {
+				vm.logger.debug(` queueName Sent ${topic.split(".").join("-")}`);
+				return data.MessageId;
+			}
+		});
 
-    }
+		return this.broker.Promise.resolve();
+	}
+	verify(opts) {
+		if (!opts.hasOwnProperty("region")) {
+			throw new Error("region is required");
+		}
+		if (!opts.hasOwnProperty("apiVersion")) {
+			throw new Error("apiVersion is required");
+		}
+	}
 
+	defaultParams() {
+		return {
+			AttributeNames: ["All"],
+			MaxNumberOfMessages: 10,
+			MessageAttributeNames: ["All"],
+			VisibilityTimeout: 20,
+			WaitTimeSeconds: 0
+		};
+	}
 
-    defaultParams() {
-        return {
-            AttributeNames: [
-                "All"
-            ],
-            MaxNumberOfMessages: 10,
-            MessageAttributeNames: [
-                "All"
-            ],
-            VisibilityTimeout: 20,
-            WaitTimeSeconds: 0
-        }
-    }
+	async createQueue(queueName) {
+		const QueueName = this.cleartopicName(queueName);
 
-    async createQueue(queueName) {
-        
-        const QueueName = this.cleartopicName(queueName);
-        
-        var params = {
-            QueueName
-        };
-        try {
-            const { QueueUrl } =   await this.findQueue(params); 
-            return QueueUrl;
+		var params = {
+			QueueName
+		};
+		try {
+			const { QueueUrl } = await this.findQueue(params);
+			return QueueUrl;
+		} catch (error) {
+			const { QueueUrl } = await this.client
+				.createQueue(params, (err, data) => {
+					if (err) {
+						return err;
+					}
+					return data.QueueUrl;
+				})
+				.promise();
 
-        } catch (error) {
-        const { QueueUrl } = await this.client.createQueue(params, (err, data) => {
-            if (err) {
-                return err;
-            }
-            return data.QueueUrl;
-        }).promise();
+			return QueueUrl;
+		}
+	}
 
-               
-        return QueueUrl;
-        
-    }
+	async findQueue(params) {
+		return this.client
+			.getQueueUrl(params, (err, data) => {
+				if (err) {
+					return null;
+				}
 
-    }
+				return data.QueueUrl;
+			})
+			.promise();
+	}
 
-    async findQueue(params) {
+	cleartopicName(topic) {
+		return topic.split(".").join("-");
+	}
+	verify(opts) {
+		if (!opts.hasOwnProperty("region")) {
+			throw new Error("region is required");
+		}
+		if (!opts.hasOwnProperty("apiVersion")) {
+			throw new Error("apiVersion is required");
+		}
+		if (!opts.hasOwnProperty("serveless")) {
+			opts.serveless = false;
+		}
 
-       return   this.client.getQueueUrl(params, (err, data) => {
-            if (err) {
-                return null;
-            }
-            
-            return data.QueueUrl;
-        }
-        ).promise();
-    }
-
-    cleartopicName(topic) {
-        return topic.split('.').join('-');
-    }
-    verify(opts) {
-        if(!opts.hasOwnProperty('region')) {
-            throw new Error('region is required');
-        }
-        if(!opts.hasOwnProperty('apiVersion')) {
-            throw new Error('apiVersion is required');
-        }
-        if(!opts.hasOwnProperty('serveless')) {
-          opts.serveless = false;
-        }
-
-        return opts;
-
-    }
+		return opts;
+	}
 }
 
 module.exports = SQSTransporter;
