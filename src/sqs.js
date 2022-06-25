@@ -58,13 +58,14 @@ class SQSTransporter extends Transporter {
 	 */
 	async subscribe(cmd, nodeID) {
 		const queueName = this.getTopicName(cmd, nodeID);
-		this.logger.info(`Subscribed in the topic ${queueName}`);
 
 		const params = this.opts.hasOwnProperty("params") ? this.opts.params : this.defaultParams();
 		params.QueueUrl = await this.createQueue(queueName);
 		const vm = this;
 
 		this.client.receiveMessage(params, (err, data) => {
+			this.logger.info(`Subscribed in the topic ${queueName}`);
+
 			if (!this.client) return this.broker.Promise.reject("Error connecting to SQS");
 			if (err) {
 				this.logger.error(err);
