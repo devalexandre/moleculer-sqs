@@ -64,8 +64,6 @@ class SQSTransporter extends Transporter {
 		const vm = this;
 
 		this.client.receiveMessage(params, (err, data) => {
-			this.logger.info(`Subscribed in the topic ${queueName}`);
-
 			if (!this.client) return this.broker.Promise.reject("Error connecting to SQS");
 			if (err) {
 				this.logger.error(err);
