@@ -75,7 +75,7 @@ class SQSTransporter extends Transporter {
 				vm.receive(cmd, message.Body);
 			}
 
-			if (!isServeless) this.subscribe(cmd, nodeID);
+			if (!this.isServeless) this.subscribe(cmd, nodeID);
 		});
 
 		return this.broker.Promise.resolve();
