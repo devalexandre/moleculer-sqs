@@ -61,6 +61,7 @@ class SQSTransporter extends Transporter {
 		const params = this.opts.hasOwnProperty("params") ? this.opts.params : this.defaultParams();
 		params.QueueUrl = await this.createQueue(queueName);
 		const vm = this;
+		this.logger.info(`Subscribed in the topic ${queueName}`);
 
 		this.client.receiveMessage(params, (err, data) => {
 			if (!this.client) return this.broker.Promise.reject("Error connecting to SQS");
