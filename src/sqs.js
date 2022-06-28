@@ -16,11 +16,12 @@ class SQSTransporter extends Transporter {
 	 *
 	 * @memberof SQSTransporter
 	 */
-	constructor(opts) {
-		super(opts);
+	constructor({ acessKeyId, secretAccessKey, apiVersion, region, serveless = false }) {
+		super({ acessKeyId, secretAccessKey, apiVersion, region });
 		this.client = null;
 		this.QueueUrl = null;
-		this.opts = this.verify(opts);
+		this.opts = this.verify({ acessKeyId, secretAccessKey, apiVersion, region });
+		this.isServeless = serveless;
 	}
 
 	/**
@@ -57,6 +58,7 @@ class SQSTransporter extends Transporter {
 	 */
 	async subscribe(cmd, nodeID) {
 		const queueName = this.getTopicName(cmd, nodeID);
+
 		const params = this.opts.hasOwnProperty("params") ? this.opts.params : this.defaultParams();
 		params.QueueUrl = await this.createQueue(queueName);
 		const vm = this;
@@ -73,7 +75,8 @@ class SQSTransporter extends Transporter {
 				vm.logger.debug(`queueName Received ${message.Body}`);
 				vm.receive(cmd, message.Body);
 			}
-			this.subscribe(cmd, nodeID);
+
+			if (!this.isServeless) this.subscribe(cmd, nodeID);
 		});
 
 		return this.broker.Promise.resolve();
