@@ -1,4 +1,4 @@
-# [WIP] Moleculer SQS Transport And Moleculer Channel
+# Moleculer SQS Transport And Moleculer Channel
 
 ![](https://docs.aws.amazon.com/pt_br/sdk-for-javascript/v2/developer-guide/images/code-samples-sqs.png)
 
