@@ -3,6 +3,7 @@
 const { Adapters } = require("@moleculer/channels");
 const { Base } = Adapters;
 const { MoleculerRetryableError } = require("moleculer").Errors;
+const SQSChannelProcessed = require("./processed");
 
 let AWS;
 
@@ -17,7 +18,6 @@ class SQSChannel extends Base {
 	constructor({ accessKeyId, secretAccessKey, apiVersion, region, isServeless = false }) {
 		super({ accessKeyId, secretAccessKey, apiVersion, region });
 		this.client = null;
-		this.QueueUrl = null;
 		this.opts = this.verify({ accessKeyId, secretAccessKey, apiVersion, region });
 		this.isServeless = isServeless;
 		this.subscriptions = new Map();
@@ -99,6 +99,8 @@ class SQSChannel extends Base {
 		if (chan.maxInFlight == null) chan.maxInFlight = this.opts.maxInFlight;
 		if (chan.maxRetries == null) chan.maxRetries = this.opts.maxRetries;
 
+		const messageIds = await this.getMessageIds(chan);
+
 		const params = Object.prototype.hasOwnProperty.call(this.opts, "params")
 			? this.opts.params
 			: this.defaultParams();
@@ -115,12 +117,14 @@ class SQSChannel extends Base {
 				return this.broker.Promise.reject(err);
 			}
 			if (data.Messages) {
-				const message = data.Messages[0];
+				for (const message of data.Messages) {
+					if (!messageIds.includes(message.MessageId)) {
+						const content = JSON.parse(message.Body);
 
-				const content = JSON.parse(message.Body);
-
-				await this.deleteMessage(params.QueueUrl, message);
-				await chan.handler(content, message);
+						await this.sendToProcessed(chan, { messageId: message.MessageId, content });
+						await chan.handler(content, message);
+					}
+				}
 			}
 
 			if (!this.isServeless) this.subscribe(chan);
@@ -258,5 +262,7 @@ class SQSChannel extends Base {
 		return false;
 	}
 }
+
+Object.assign(SQSChannel.prototype, SQSChannelProcessed);
 
 module.exports = SQSChannel;
