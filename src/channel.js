@@ -4,8 +4,7 @@ const { Adapters } = require("@moleculer/channels");
 const { Base } = Adapters;
 const { MoleculerRetryableError } = require("moleculer").Errors;
 const SQSChannelProcessed = require("./processed");
-
-let AWS;
+const AWS = require("aws-sdk");
 
 class SQSChannel extends Base {
 	/**
