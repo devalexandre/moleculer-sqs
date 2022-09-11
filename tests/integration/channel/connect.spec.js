@@ -1,8 +1,8 @@
 const SQSChannel = require("../../../src/channel");
 
 const transport = new SQSChannel({
-	accessKeyId: "AKIAXNNEHSOTTEBJCAJD",
-	secretAccessKey: "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",
+	accessKeyId: "",
+	secretAccessKey: "",
 	apiVersion: "2012-11-05",
 	region: "us-east-1",
 	isServeless: true
