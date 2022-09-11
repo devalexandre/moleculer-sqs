@@ -1,29 +1,31 @@
 {
-	"name": "@indevweb/moleculer-transport-amazonsqs",
-	"version": "0.0.2",
+	"name": "@devevangelista/moleculer-sqs",
+	"version": "0.0.3-dev",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
 		"prepare": "husky install",
-		"format": "prettier --write '**/*.{js,json,md}' --ignore-unknown"
+		"format": "prettier --write '**/*.{js,json,md}' --ignore-unknown",
+		"test": "jest --coverage"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/devalexandre/Moleculer-Transport-AmazonSQS.git"
+		"url": "git+https://github.com/devalexandre/Moleculer-AWS-SQS.git"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"bugs": {
-		"url": "https://github.com/devalexandre/Moleculer-Transport-AmazonSQS/issues"
+		"url": "https://github.com/devalexandre/Moleculer-AWS-SQS/issues"
 	},
-	"homepage": "https://github.com/devalexandre/Moleculer-Transport-AmazonSQS#readme",
+	"homepage": "https://github.com/devalexandre/Moleculer-AWS-SQS#readme",
 	"dependencies": {
-		"aws-sdk": "^2.1037.0",
+		"@moleculer/channels": "^0.1.2",
+		"aws-sdk": "^2.1173.0",
+		"jest": "^29.0.3",
 		"moleculer": "^0.14.18"
 	},
 	"devDependencies": {
-		"aws-sdk": "^2.1037.0",
 		"eslint": "^7.32.0",
 		"eslint-config-prettier": "^8.3.0",
 		"eslint-config-standard": "^16.0.3",
@@ -32,7 +34,6 @@
 		"eslint-plugin-promise": "^5.2.0",
 		"husky": "^7.0.4",
 		"lint-staged": "^12.1.2",
-		"moleculer": "^0.14.18",
 		"prettier": "^2.5.1"
 	},
 	"lint-staged": {

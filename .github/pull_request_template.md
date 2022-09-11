@@ -2,6 +2,6 @@
 
 ## :test_tube: How to test
 
-## :rockt: Checklist
+## :rocket: Checklist
 
 -   [] Create Test
