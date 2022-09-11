@@ -1,7 +1,7 @@
 {
 	"name": "@indevweb/moleculer-sqs",
-	"version": "0.0.3-dev",
-	"description": "",
+	"version": "0.0.3",
+	"description": "Package for create services with AWS SQS",
 	"main": "index.js",
 	"scripts": {
 		"prepare": "husky install",
@@ -9,15 +9,15 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/devalexandre/Moleculer-AWS-SQS.git"
+		"url": "git+https://github.com/devalexandre/moleculer-sqs.git"
 	},
 	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"bugs": {
-		"url": "https://github.com/devalexandre/Moleculer-AWS-SQS/issues"
+		"url": "https://github.com/devalexandre/moleculer-sqs.git/issues"
 	},
-	"homepage": "https://github.com/devalexandre/Moleculer-AWS-SQS#readme",
+	"homepage": "https://github.com/devalexandre/moleculer-sqs.git#readme",
 	"dependencies": {
 		"@moleculer/channels": "^0.1.2",
 		"aws-sdk": "^2.1173.0",
