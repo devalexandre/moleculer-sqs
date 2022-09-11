@@ -1,3 +1,7 @@
-const SQSTransporter = require("./src/sqs");
+const SQSTransporter = require("./src/transport");
+const SQSChannel = require("./src/channel");
 
-module.exports = SQSTransporter;
+module.exports = {
+	SQSTransporter,
+	SQSChannel
+};

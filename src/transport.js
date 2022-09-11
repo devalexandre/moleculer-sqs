@@ -112,14 +112,6 @@ class SQSTransporter extends Transporter {
 
 		return this.broker.Promise.resolve();
 	}
-	verify(opts) {
-		if (!opts.hasOwnProperty("region")) {
-			throw new Error("region is required");
-		}
-		if (!opts.hasOwnProperty("apiVersion")) {
-			throw new Error("apiVersion is required");
-		}
-	}
 
 	defaultParams() {
 		return {
@@ -134,7 +126,7 @@ class SQSTransporter extends Transporter {
 	async createQueue(queueName) {
 		const QueueName = this.cleartopicName(queueName);
 
-		var params = {
+		const params = {
 			QueueName
 		};
 		try {
@@ -169,14 +161,17 @@ class SQSTransporter extends Transporter {
 	cleartopicName(topic) {
 		return topic.split(".").join("-");
 	}
+
 	verify(opts) {
-		if (!opts.hasOwnProperty("region")) {
+		if (!Object.prototype.hasOwnProperty.call(opts, "region")) {
 			throw new Error("region is required");
 		}
-		if (!opts.hasOwnProperty("apiVersion")) {
+
+		if (!Object.prototype.hasOwnProperty.call(opts, "apiVersion")) {
 			throw new Error("apiVersion is required");
 		}
-		if (!opts.hasOwnProperty("serveless")) {
+
+		if (!Object.prototype.hasOwnProperty.call(opts, "serveless")) {
 			opts.serveless = false;
 		}
 

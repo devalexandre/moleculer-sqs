@@ -2,7 +2,7 @@
 
 ![](https://docs.aws.amazon.com/pt_br/sdk-for-javascript/v2/developer-guide/images/code-samples-sqs.png)
 
-Moleculer SQS is transport for use AWS SQS.
+Moleculer SQS is channel for use AWS SQS.
 
 ## How To
 
@@ -21,42 +21,40 @@ Use a official
 const { ServiceBroker } = require("moleculer");
 const SQSTransporter = require("@indevweb/moleculer-transport-amazonsqs");
 
-const transport = new SQSTransporter({
-    accessKeyId: "",
-    secretAccessKey: "",
-    apiVersion: '',
-    region: '',
-})
-
+const adapter = new SqsAdapter({
+	accessKeyId: "",
+	secretAccessKey: "",
+	apiVersion: "2012-11-05",
+	region: "us-east-1",
+	isServeless: true
+});
 
 // Create a ServiceBroker
 const broker = new ServiceBroker({
-    transporter: transport,
+	middlewares: [
+		ChannelsMiddleware({
+			adapter
+		})
+	]
 });
 
 // Define a service
 broker.createService({
-    name: "calcular",
-    actions: {
-       async add(ctx) {
-           const result = ctx.params.a + ctx.params.b;
-            return result
-        }
-    }
-
+	name: "calcular",
+	channels: {
+		async sum(msg, raw) {
+			console.log(`Paylod is ${JSON.stringify(msg)}`);
+			return msg.a + msg.b;
+		}
+	}
 });
 
-
-broker.start()
-    // Call the service
-    .then(() => broker.call("calcular.add", { a: 5, b: 3 }))
-    // Print the response
-    .then(res => {
-        console.log("5 + 3 =", res)
-
-    })
-    .catch(err => {
-        console.error("Error occured!" ,${err.message})
-
-    });
+broker
+	.start()
+	// Call the service
+	.then(() => broker.sendToChannel("sum", { a: 5, b: 3 }))
+	.then(res => this.logger.info("O resultado é", res))
+	.catch(err => {
+		console.error("Error occured!", err.message);
+	});
 ```
