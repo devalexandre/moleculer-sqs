@@ -23,6 +23,7 @@ class SQSTransporter extends Transporter {
 		this.isServeless = isServeless;
 		this.connected = false;
 		this.stopping = false;
+		this.disableVersionCheck = true;
 	}
 
 	/**
@@ -101,7 +102,7 @@ class SQSTransporter extends Transporter {
 			// await this.deleteMessage(params.QueueUrl, message)
 		}
 
-		this.subscribe(cmd, nodeID);
+		if (!this.isServeless) this.subscribe(cmd, nodeID);
 		return this.broker.Promise.resolve();
 	}
 
