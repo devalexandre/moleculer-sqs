@@ -1,12 +1,11 @@
 {
-	"name": "@devevangelista/moleculer-sqs",
+	"name": "@indevweb/moleculer-sqs",
 	"version": "0.0.3-dev",
 	"description": "",
 	"main": "index.js",
 	"scripts": {
 		"prepare": "husky install",
-		"format": "prettier --write '**/*.{js,json,md}' --ignore-unknown",
-		"test": "jest --coverage"
+		"format": "prettier --write '**/*.{js,json,md}' --ignore-unknown"
 	},
 	"repository": {
 		"type": "git",
