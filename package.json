@@ -1,6 +1,6 @@
 {
 	"name": "@indevweb/moleculer-sqs",
-	"version": "0.0.3",
+	"version": "0.0.4-dev",
 	"description": "Package for create services with AWS SQS",
 	"main": "index.js",
 	"scripts": {

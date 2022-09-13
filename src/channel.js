@@ -4,7 +4,7 @@ const { Adapters } = require("@moleculer/channels");
 const { Base } = Adapters;
 const { MoleculerRetryableError } = require("moleculer").Errors;
 const SQSChannelProcessed = require("./processed");
-const AWS = require("aws-sdk");
+let AWS;
 
 class SQSChannel extends Base {
 	/**
@@ -14,14 +14,22 @@ class SQSChannel extends Base {
 	 *
 	 * @memberof SqsAdapter
 	 */
-	constructor({ accessKeyId, secretAccessKey, apiVersion, region, isServeless = false }) {
-		super({ accessKeyId, secretAccessKey, apiVersion, region });
+	constructor({
+		accessKeyId,
+		secretAccessKey,
+		apiVersion,
+		region,
+		queueUrl = false,
+		isServeless = false
+	}) {
+		super({ accessKeyId, secretAccessKey, apiVersion, region, queueUrl, isServeless });
 		this.client = null;
 		this.opts = this.verify({ accessKeyId, secretAccessKey, apiVersion, region });
 		this.isServeless = isServeless;
 		this.subscriptions = new Map();
 		this.connected = false;
 		this.stopping = false;
+		this.QueueUrl = queueUrl;
 	}
 
 	/**
@@ -104,7 +112,7 @@ class SQSChannel extends Base {
 			? this.opts.params
 			: this.defaultParams();
 
-		params.QueueUrl = await this.createQueue(chan.name);
+		params.QueueUrl = this.QueueUrl ? this.QueueUrl : await this.createQueue(chan.name);
 
 		if (!this.client) return this.broker.Promise.reject("Error connecting to SQS");
 
@@ -156,7 +164,7 @@ class SQSChannel extends Base {
 			throw new MoleculerRetryableError("Adapter not yet connected. Skipping publishing.");
 		}
 
-		const QueueUrl = await this.createQueue(channelName);
+		const QueueUrl = this.QueueUrl ? this.QueueUrl : await this.createQueue(channelName);
 		const message = opts.raw ? payload : JSON.stringify(payload);
 		const params = {
 			MessageBody: message,
