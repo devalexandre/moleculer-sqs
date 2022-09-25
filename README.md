@@ -22,8 +22,8 @@ Use a official
 When You use channels , it haven't return like transport.
 
 ```js
-const { ServiceBroker } = require("moleculer");
-const { SQSChannel } = require("@devevangelista/moleculer-sqs");
+const ChannelsMiddleware = require("@moleculer/channels").Middleware;
+const { SQSChannel } = require("@indevweb/moleculer-sqs");
 
 const adapter = new SQSChannel({
 	accessKeyId: "",
@@ -48,7 +48,6 @@ broker.createService({
 	channels: {
 		async sum(msg, raw) {
 			console.log(`Paylod is ${JSON.stringify(msg)}`);
-			return msg.a + msg.b;
 		}
 	}
 });
@@ -57,7 +56,6 @@ broker
 	.start()
 	// Call the service
 	.then(() => broker.sendToChannel("sum", { a: 5, b: 3 }))
-	.then(res => this.logger.info("O resultado é", res))
 	.catch(err => {
 		console.error("Error occured!", err.message);
 	});
@@ -65,27 +63,26 @@ broker
 
 ### Transport
 
+When use transport you can to use for call some function and return
+the result or can you call other service, using sqs.
+
 ```js
-const { ServiceBroker } = require("moleculer");
-const { SQSTransporter } = require("./index");
+const ChannelsMiddleware = require("@moleculer/channels").Middleware;
+const { SQSTransporter } = require("@indevweb/moleculer-sqs");
 
 const transport = new SQSTransporter({
 	accessKeyId: "",
 	secretAccessKey: "",
 	apiVersion: "2012-11-05",
 	region: "us-east-1",
-	isServeless: true
+	isServeless: false
 });
 
 // Create a ServiceBroker
 const broker = new ServiceBroker({
-	transporter: transport,
-	transit: {
-		maxQueueSize: 50 * 1000, // 50k ~ 400MB,
-		maxChunkSize: 256 * 1024, // 256KB
-		disableReconnect: false,
-		disableVersionCheck: true
-	}
+	nodeID: "match",
+	namespace: "calcular",
+	transporter: transport
 });
 
 // Define a service
@@ -99,15 +96,5 @@ broker.createService({
 	}
 });
 
-broker
-	.start()
-	// Call the service
-	.then(() => broker.call("calcular.add", { a: 5, b: 3 }))
-	// Print the response
-	.then(res => {
-		console.log("5 + 3 =", res);
-	})
-	.catch(err => {
-		console.error("Error occured!", err.message);
-	});
+broker.start();
 ```
