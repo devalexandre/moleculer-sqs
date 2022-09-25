@@ -64,8 +64,6 @@ class SQSTransporter extends Transporter {
 
 		try {
 			if (this.client) {
-				this.logger.info("Closing SQS AWS connection...");
-
 				this.logger.info("SQS AWS connection closed.");
 			}
 		} catch (error) {
@@ -92,14 +90,16 @@ class SQSTransporter extends Transporter {
 
 		params.QueueUrl = await this.createQueue(queueName);
 
-		const { Messages } = await this.client.receiveMessage(params).promise();
+		const result = await this.client.receiveMessage(params).promise();
 
-		if (Messages) {
-			const message = Messages[0];
+		if (Object.prototype.hasOwnProperty.call(result, "Messages")) {
+			const message = result.Messages[0];
 
+			await this.deleteMessage(params.QueueUrl, message);
 			this.logger.debug(`queueName Received ${message.Body}`);
-			this.receive(cmd, message.Body);
-			// await this.deleteMessage(params.QueueUrl, message)
+			this.logger.debug(`queueName  ${queueName}`);
+
+			this.receive(cmd, Buffer.from(message.Body));
 		}
 
 		if (!this.isServeless) this.subscribe(cmd, nodeID);
@@ -115,15 +115,15 @@ class SQSTransporter extends Transporter {
 	 *
 	 * @returns {Promise}
 	 */
-	async send(cmd, payload) {
+	async send(cmd, payload, opts = {}) {
 		if (!this.client)
 			throw new MoleculerError("Adapter not yet connected. Skipping publishing.");
 
 		const QueueUrl = await this.createQueue(cmd);
-		const message = this.deserialize(cmd, payload);
+		const message = opts.raw ? payload : payload.toString();
 
 		const params = {
-			MessageBody: JSON.stringify(message),
+			MessageBody: message,
 			QueueUrl
 		};
 

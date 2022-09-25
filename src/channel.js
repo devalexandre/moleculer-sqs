@@ -19,7 +19,7 @@ class SQSChannel extends Base {
 		secretAccessKey,
 		apiVersion,
 		region,
-		queueUrl = false,
+		queueUrl = null,
 		isServeless = false
 	}) {
 		super({ accessKeyId, secretAccessKey, apiVersion, region, queueUrl, isServeless });
@@ -85,8 +85,6 @@ class SQSChannel extends Base {
 
 		try {
 			if (this.client) {
-				this.logger.info("Closing SQS AWS connection...");
-
 				this.logger.info("SQS AWS connection closed.");
 			}
 		} catch (error) {
@@ -205,6 +203,7 @@ class SQSChannel extends Base {
 		};
 		try {
 			const { QueueUrl } = await this.findQueue(params);
+			this.QueueUrl = QueueUrl;
 			return QueueUrl;
 		} catch (error) {
 			const { QueueUrl } = await this.client
@@ -215,7 +214,7 @@ class SQSChannel extends Base {
 					return data.QueueUrl;
 				})
 				.promise();
-
+			this.QueueUrl = QueueUrl;
 			return QueueUrl;
 		}
 	}
